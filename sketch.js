@@ -91,7 +91,8 @@ function draw() {
   }
 
   // 繪製偵測到的臉部面具
-  if (faces.length > 0) {
+  // 加上 maskImg 檢查，確保圖片載入成功（寬度大於1）且有偵測到臉部
+  if (faces.length > 0 && maskImg && maskImg.width > 1) {
     let face = faces[0];
     // 使用臉部邊界框 (box) 來定位和縮放面具
     imageMode(CENTER);
@@ -136,9 +137,9 @@ function draw() {
 // 當視窗大小改變時，重新調整畫布大小
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  // 加上更嚴謹的檢查，確保 video 物件及其 elt 屬性都已存在
-  if (video && video.elt) {
-    video.size(width * 0.5, height * 0.5);
+  // 確保 video 已定義且 capture 成功後才執行調整大小
+  if (video && typeof video.size === 'function') {
+    video.size(windowWidth * 0.5, windowHeight * 0.5);
   }
 }
 
