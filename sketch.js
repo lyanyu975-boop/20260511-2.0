@@ -17,10 +17,12 @@ function preload() {
   bodyPose = ml5.bodyPose();
   // 載入 HandPose 模型
   handPose = ml5.handPose();
-  // 載入 5 種耳環圖片
-  for (let i = 1; i <= 5; i++) {
-    earringImages.push(loadImage(`pic/acc${i}_ring.png`));
-  }
+  // 載入 5 種指定的耳環圖片
+  earringImages[0] = loadImage('pic/acc1_ring.png');
+  earringImages[1] = loadImage('pic/acc2_pearl.png');
+  earringImages[2] = loadImage('pic/acc3_tassel.png');
+  earringImages[3] = loadImage('pic/acc4_jade.png');
+  earringImages[4] = loadImage('pic/acc5_phoenix.png');
 }
 
 function setup() {
@@ -111,7 +113,9 @@ function draw() {
 // 當視窗大小改變時，重新調整畫布大小
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  video.size(windowWidth * 0.5, windowHeight * 0.5);
+  if (video) {
+    video.size(windowWidth * 0.5, windowHeight * 0.5);
+  }
 }
 
 // 取得辨識結果的回呼函式
