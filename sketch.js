@@ -103,13 +103,29 @@ function draw() {
     push();
     imageMode(CENTER);
     for (let face of faces) {
-      // 使用臉部邊界框 (box) 來定位和縮放面具
-      // 放大倍率調整為 1.4 以更完整覆蓋臉部，可依需求微調
-      let mWidth = face.box.width * 1.4;
-      let mHeight = face.box.height * 1.4;
-      let mX = face.box.x + face.box.width / 2;
-      let mY = face.box.y + face.box.height / 2;
-      image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
+      // ml5.faceMesh 在某些版本可能不會直接提供 .box 屬性
+      // 如果缺失，我們直接從關鍵點 (keypoints) 中計算出邊界框
+      let box = face.box;
+      if (!box && face.keypoints) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let kp of face.keypoints) {
+          if (kp.x < minX) minX = kp.x;
+          if (kp.y < minY) minY = kp.y;
+          if (kp.x > maxX) maxX = kp.x;
+          if (kp.y > maxY) maxY = kp.y;
+        }
+        box = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+
+      // 確保取得有效邊界框後再進行繪製
+      if (box) {
+        // 放大倍率調整為 1.4 以更完整覆蓋臉部，可依需求微調
+        let mWidth = box.width * 1.4;
+        let mHeight = box.height * 1.4;
+        let mX = box.x + box.width / 2;
+        let mY = box.y + box.height / 2;
+        image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
+      }
     }
     pop();
   }
