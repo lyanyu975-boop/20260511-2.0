@@ -100,15 +100,18 @@ function draw() {
   // 繪製偵測到的臉部面具
   // 加上 maskImg 檢查，確保圖片載入成功（寬度大於1）且有偵測到臉部
   if (faces.length > 0 && maskImg && maskImg.width > 1) {
-    let face = faces[0];
-    // 使用臉部邊界框 (box) 來定位和縮放面具
+    push();
     imageMode(CENTER);
-    // 稍微放大一點面具 (1.2倍) 以覆蓋邊緣，你可以根據需求調整
-    let mWidth = face.box.width * 1.3;
-    let mHeight = face.box.height * 1.3;
-    let mX = face.box.x + face.box.width / 2;
-    let mY = face.box.y + face.box.height / 2;
-    image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
+    for (let face of faces) {
+      // 使用臉部邊界框 (box) 來定位和縮放面具
+      // 放大倍率調整為 1.4 以更完整覆蓋臉部，可依需求微調
+      let mWidth = face.box.width * 1.4;
+      let mHeight = face.box.height * 1.4;
+      let mX = face.box.x + face.box.width / 2;
+      let mY = face.box.y + face.box.height / 2;
+      image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
+    }
+    pop();
   }
 
   // 繪製偵測到的耳垂點
@@ -120,13 +123,12 @@ function draw() {
     let leftEar = pose.left_ear;
     let rightEar = pose.right_ear;
 
-    // 設定圖片繪製模式為中心，這樣圖片中心才會對準耳垂點
+    push();
     imageMode(CENTER);
-    let earringSize = 50; // 你可以根據圖片實際大小調整這個數值
+    let earringSize = 50; 
 
     // 畫左耳垂
     if (leftEar && leftEar.confidence > 0.1) {
-      // 座標需加上影像在畫布上的位移量
       image(currentEarring, leftEar.x + xPos, leftEar.y + yPos, earringSize, earringSize);
     }
 
@@ -134,8 +136,7 @@ function draw() {
     if (rightEar && rightEar.confidence > 0.1) {
       image(currentEarring, rightEar.x + xPos, rightEar.y + yPos, earringSize, earringSize);
     }
-    // 恢復預設繪製模式，以免影響其他繪圖邏輯
-    imageMode(CORNER);
+    pop();
   }
   
   pop();
