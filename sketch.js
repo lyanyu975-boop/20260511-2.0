@@ -1,8 +1,11 @@
 let video;
 let bodyPose;
+let handPose;
 let poses = [];
+let hands = [];
 let connections;
-let earringImg;
+let earringImages = [];
+let currentEarring = null;
 
 function preload() {
   // 檢查 ml5 是否成功載入
@@ -12,8 +15,12 @@ function preload() {
   }
   // 載入 BodyPose 模型，這可以用來辨識身體關鍵點（包含耳朵）
   bodyPose = ml5.bodyPose();
-  // 載入耳環圖片
-  earringImg = loadImage('pic/acc1_ring.png');
+  // 載入 HandPose 模型
+  handPose = ml5.handPose();
+  // 載入 5 種耳環圖片
+  for (let i = 1; i <= 5; i++) {
+    earringImages.push(loadImage(`pic/acc${i}_ring.png`));
+  }
 }
 
 function setup() {
@@ -37,6 +44,9 @@ function setup() {
   if (bodyPose) {
     bodyPose.detectStart(video, gotPoses);
   }
+  if (handPose) {
+    handPose.detectStart(video, gotHands);
+  }
 }
 
 function draw() {
@@ -59,8 +69,17 @@ function draw() {
   // 因為座標已經翻轉，xPos 繪製位置會在視覺上的對應位置
   image(video, xPos, yPos, vW, vH);
 
+  // 處理手勢辨識：計算手指數量並更新耳環樣式
+  if (hands.length > 0) {
+    let numFingers = countFingers(hands[0]);
+    // 只有在手指數量為 1~5 時才更新，若為 0 則保留上次的樣子
+    if (numFingers >= 1 && numFingers <= 5) {
+      currentEarring = earringImages[numFingers - 1];
+    }
+  }
+
   // 繪製偵測到的耳垂點
-  if (poses.length > 0) {
+  if (poses.length > 0 && currentEarring) {
     let pose = poses[0];
     
     // ml5 bodyPose 提供 left_ear 與 right_ear
@@ -75,12 +94,12 @@ function draw() {
     // 畫左耳垂
     if (leftEar && leftEar.confidence > 0.1) {
       // 座標需加上影像在畫布上的位移量
-      image(earringImg, leftEar.x + xPos, leftEar.y + yPos, earringSize, earringSize);
+      image(currentEarring, leftEar.x + xPos, leftEar.y + yPos, earringSize, earringSize);
     }
 
     // 畫右耳垂
     if (rightEar && rightEar.confidence > 0.1) {
-      image(earringImg, rightEar.x + xPos, rightEar.y + yPos, earringSize, earringSize);
+      image(currentEarring, rightEar.x + xPos, rightEar.y + yPos, earringSize, earringSize);
     }
     // 恢復預設繪製模式，以免影響其他繪圖邏輯
     imageMode(CORNER);
@@ -98,4 +117,23 @@ function windowResized() {
 // 取得辨識結果的回呼函式
 function gotPoses(results) {
   poses = results;
+}
+
+function gotHands(results) {
+  hands = results;
+}
+
+// 計算伸出的手指數量
+function countFingers(hand) {
+  let count = 0;
+  // 食指、中指、無名指、小指：指尖 Y 座標小於 (高於) 第二關節則視為伸出
+  if (hand.index_finger_tip.y < hand.index_finger_pip.y) count++;
+  if (hand.middle_finger_tip.y < hand.middle_finger_pip.y) count++;
+  if (hand.ring_finger_tip.y < hand.ring_finger_pip.y) count++;
+  if (hand.pinky_finger_tip.y < hand.pinky_finger_pip.y) count++;
+  
+  // 拇指：檢查指尖與食指根部的水平距離（簡單判定法）
+  let thumbDist = dist(hand.thumb_tip.x, hand.thumb_tip.y, hand.index_finger_mcp.x, hand.index_finger_mcp.y);
+  if (thumbDist > 40) count++;
+  return count;
 }
