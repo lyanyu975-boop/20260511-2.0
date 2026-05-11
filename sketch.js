@@ -4,6 +4,11 @@ let poses = [];
 let connections;
 
 function preload() {
+  // 檢查 ml5 是否成功載入
+  if (typeof ml5 === 'undefined') {
+    console.error("ml5.js 尚未載入，請檢查 HTML 中的 script 標籤。");
+    return;
+  }
   // 載入 BodyPose 模型，這可以用來辨識身體關鍵點（包含耳朵）
   bodyPose = ml5.bodyPose();
 }
@@ -13,14 +18,22 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
 
   // 擷取攝影機影像
-  video = createCapture(VIDEO);
+  // 加上錯誤處理，以利排查 NotFoundError
+  video = createCapture(VIDEO, function(stream) {
+    console.log("攝影機已就緒");
+  }, function(err) {
+    console.error("無法存取攝影機：", err);
+  });
+
   // 設定影像顯示的寬高為畫布寬高的 50%
   video.size(windowWidth * 0.5, windowHeight * 0.5);
   // 隱藏預設的 HTML 影片元件，我們要在畫布上繪製
   video.hide();
 
   // 開始偵測姿勢
-  bodyPose.detectStart(video, gotPoses);
+  if (bodyPose) {
+    bodyPose.detectStart(video, gotPoses);
+  }
 }
 
 function draw() {
