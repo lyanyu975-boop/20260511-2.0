@@ -47,10 +47,12 @@ function setup() {
     console.error("無法存取攝影機：", err);
   });
 
-  // 設定影像顯示的寬高為畫布寬高的 50%
-  video.size(windowWidth * 0.5, windowHeight * 0.5);
-  // 隱藏預設的 HTML 影片元件，我們要在畫布上繪製
-  video.hide();
+  if (video) {
+    // 設定影像顯示的寬高為畫布寬高的 50%
+    video.size(windowWidth * 0.5, windowHeight * 0.5);
+    // 隱藏預設的 HTML 影片元件，我們要在畫布上繪製
+    video.hide();
+  }
 
   // 開始偵測姿勢
   if (bodyPose) {
@@ -82,7 +84,9 @@ function draw() {
 
   // 繪製攝影機影像到畫布中間
   // 因為座標已經翻轉，xPos 繪製位置會在視覺上的對應位置
-  image(video, xPos, yPos, vW, vH);
+  if (video && video.loadedmetadata) {
+    image(video, xPos, yPos, vW, vH);
+  }
 
   // 處理手勢辨識：計算手指數量並更新耳環樣式
   if (hands.length > 0) {
