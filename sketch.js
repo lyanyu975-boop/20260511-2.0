@@ -1,11 +1,14 @@
 let video;
 let bodyPose;
 let handPose;
+let faceMesh;
 let poses = [];
 let hands = [];
+let faces = [];
 let connections;
 let earringImages = [];
 let currentEarring = null;
+let maskImg;
 
 function preload() {
   // 檢查 ml5 是否成功載入
@@ -17,12 +20,16 @@ function preload() {
   bodyPose = ml5.bodyPose();
   // 載入 HandPose 模型
   handPose = ml5.handPose();
+  // 載入 FaceMesh 模型
+  faceMesh = ml5.faceMesh();
   // 載入 5 種指定的飾品圖片，請確保 pic 目錄下檔案名稱正確
   earringImages[0] = loadImage('pic/acc1_ring.png');
   earringImages[1] = loadImage('pic/acc2_pearl.png');   // 修正為 pearl
   earringImages[2] = loadImage('pic/acc3_tassel.png');  // 修正為 tassel
   earringImages[3] = loadImage('pic/acc4_jade.png');    // 修正為 jade
   earringImages[4] = loadImage('pic/acc5_phoenix.png'); // 修正為 phoenix
+  // 載入面具圖片
+  maskImg = loadImage('pic/mask1_red.png');
 }
 
 function setup() {
@@ -48,6 +55,9 @@ function setup() {
   }
   if (handPose) {
     handPose.detectStart(video, gotHands);
+  }
+  if (faceMesh) {
+    faceMesh.detectStart(video, gotFaces);
   }
 }
 
@@ -78,6 +88,19 @@ function draw() {
     if (numFingers >= 1 && numFingers <= 5) {
       currentEarring = earringImages[numFingers - 1];
     }
+  }
+
+  // 繪製偵測到的臉部面具
+  if (faces.length > 0) {
+    let face = faces[0];
+    // 使用臉部邊界框 (box) 來定位和縮放面具
+    imageMode(CENTER);
+    // 稍微放大一點面具 (1.2倍) 以覆蓋邊緣，你可以根據需求調整
+    let mWidth = face.box.width * 1.3;
+    let mHeight = face.box.height * 1.3;
+    let mX = face.box.x + face.box.width / 2;
+    let mY = face.box.y + face.box.height / 2;
+    image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
   }
 
   // 繪製偵測到的耳垂點
@@ -126,6 +149,10 @@ function gotPoses(results) {
 
 function gotHands(results) {
   hands = results;
+}
+
+function gotFaces(results) {
+  faces = results;
 }
 
 // 計算伸出的手指數量
