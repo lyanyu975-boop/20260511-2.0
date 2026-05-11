@@ -11,6 +11,11 @@ let currentEarring = null;
 let maskImg;
 
 function preload() {
+  // 設定 TensorFlow.js 後端為 WebGL，避免 Windows 上的 WebGPU 問題
+  if (typeof tf !== 'undefined') {
+    tf.setBackend('webgl');
+  }
+  
   // 檢查 ml5 是否成功載入
   if (typeof ml5 === 'undefined') {
     console.error("ml5.js 尚未載入，請檢查 HTML 中的 script 標籤。");
