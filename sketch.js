@@ -1,11 +1,14 @@
 let video;
 let bodyPose;
 let handPose;
+let faceMesh;
 let poses = [];
 let hands = [];
+let faces = [];
 let connections;
 let earringImages = [];
 let currentEarring = null;
+let maskImg;
 
 function preload() {
   // 檢查 ml5 是否成功載入
@@ -17,12 +20,19 @@ function preload() {
   bodyPose = ml5.bodyPose();
   // 載入 HandPose 模型
   handPose = ml5.handPose();
+  // 載入 FaceMesh 模型
+  faceMesh = ml5.faceMesh();
   // 載入 5 種指定的飾品圖片，請確保 pic 目錄下檔案名稱正確
   earringImages[0] = loadImage('pic/acc1_ring.png');
   earringImages[1] = loadImage('pic/acc2_pearl.png');   // 修正為 pearl
   earringImages[2] = loadImage('pic/acc3_tassel.png');  // 修正為 tassel
   earringImages[3] = loadImage('pic/acc4_jade.png');    // 修正為 jade
   earringImages[4] = loadImage('pic/acc5_phoenix.png'); // 修正為 phoenix
+  // 載入面具圖片
+  maskImg = loadImage('pic/mask1_red.png', 
+    () => console.log("面具圖片載入成功"), 
+    () => console.error("找不到面具圖片：pic/mask1_red.png，請確認檔案路徑與名稱是否正確。")
+  );
 }
 
 function setup() {
@@ -37,10 +47,12 @@ function setup() {
     console.error("無法存取攝影機：", err);
   });
 
-  // 設定影像顯示的寬高為畫布寬高的 50%
-  video.size(windowWidth * 0.5, windowHeight * 0.5);
-  // 隱藏預設的 HTML 影片元件，我們要在畫布上繪製
-  video.hide();
+  if (video) {
+    // 設定影像顯示的寬高為畫布寬高的 50%
+    video.size(windowWidth * 0.5, windowHeight * 0.5);
+    // 隱藏預設的 HTML 影片元件，我們要在畫布上繪製
+    video.hide();
+  }
 
   // 開始偵測姿勢
   if (bodyPose) {
@@ -48,6 +60,9 @@ function setup() {
   }
   if (handPose) {
     handPose.detectStart(video, gotHands);
+  }
+  if (faceMesh) {
+    faceMesh.detectStart(video, gotFaces);
   }
 }
 
@@ -69,7 +84,9 @@ function draw() {
 
   // 繪製攝影機影像到畫布中間
   // 因為座標已經翻轉，xPos 繪製位置會在視覺上的對應位置
-  image(video, xPos, yPos, vW, vH);
+  if (video && video.loadedmetadata) {
+    image(video, xPos, yPos, vW, vH);
+  }
 
   // 處理手勢辨識：計算手指數量並更新耳環樣式
   if (hands.length > 0) {
@@ -78,6 +95,20 @@ function draw() {
     if (numFingers >= 1 && numFingers <= 5) {
       currentEarring = earringImages[numFingers - 1];
     }
+  }
+
+  // 繪製偵測到的臉部面具
+  // 加上 maskImg 檢查，確保圖片載入成功（寬度大於1）且有偵測到臉部
+  if (faces.length > 0 && maskImg && maskImg.width > 1) {
+    let face = faces[0];
+    // 使用臉部邊界框 (box) 來定位和縮放面具
+    imageMode(CENTER);
+    // 稍微放大一點面具 (1.2倍) 以覆蓋邊緣，你可以根據需求調整
+    let mWidth = face.box.width * 1.3;
+    let mHeight = face.box.height * 1.3;
+    let mX = face.box.x + face.box.width / 2;
+    let mY = face.box.y + face.box.height / 2;
+    image(maskImg, mX + xPos, mY + yPos, mWidth, mHeight);
   }
 
   // 繪製偵測到的耳垂點
@@ -113,9 +144,9 @@ function draw() {
 // 當視窗大小改變時，重新調整畫布大小
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  // 加上更嚴謹的檢查，確保 video 物件及其 elt 屬性都已存在
-  if (video && video.elt) {
-    video.size(width * 0.5, height * 0.5);
+  // 確保 video 已定義且 capture 成功後才執行調整大小
+  if (video && typeof video.size === 'function') {
+    video.size(windowWidth * 0.5, windowHeight * 0.5);
   }
 }
 
@@ -126,6 +157,10 @@ function gotPoses(results) {
 
 function gotHands(results) {
   hands = results;
+}
+
+function gotFaces(results) {
+  faces = results;
 }
 
 // 計算伸出的手指數量
