@@ -29,7 +29,10 @@ function preload() {
   earringImages[3] = loadImage('pic/acc4_jade.png');    // 修正為 jade
   earringImages[4] = loadImage('pic/acc5_phoenix.png'); // 修正為 phoenix
   // 載入面具圖片
-  maskImg = loadImage('pic/mask1_red.png');
+  maskImg = loadImage('pic/mask1_red.png', 
+    () => console.log("面具圖片載入成功"), 
+    () => console.error("找不到面具圖片：pic/mask1_red.png，請確認檔案路徑與名稱是否正確。")
+  );
 }
 
 function setup() {
