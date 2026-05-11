@@ -2,6 +2,7 @@ let video;
 let bodyPose;
 let poses = [];
 let connections;
+let earringImg;
 
 function preload() {
   // 檢查 ml5 是否成功載入
@@ -11,6 +12,8 @@ function preload() {
   }
   // 載入 BodyPose 模型，這可以用來辨識身體關鍵點（包含耳朵）
   bodyPose = ml5.bodyPose();
+  // 載入耳環圖片
+  earringImg = loadImage('pic/acc1_ring.png');
 }
 
 function setup() {
@@ -65,19 +68,22 @@ function draw() {
     let leftEar = pose.left_ear;
     let rightEar = pose.right_ear;
 
-    fill(255, 255, 0); // 黃色
-    noStroke();
+    // 設定圖片繪製模式為中心，這樣圖片中心才會對準耳垂點
+    imageMode(CENTER);
+    let earringSize = 50; // 你可以根據圖片實際大小調整這個數值
 
     // 畫左耳垂
     if (leftEar && leftEar.confidence > 0.1) {
       // 座標需加上影像在畫布上的位移量
-      ellipse(leftEar.x + xPos, leftEar.y + yPos, 20, 20);
+      image(earringImg, leftEar.x + xPos, leftEar.y + yPos, earringSize, earringSize);
     }
 
     // 畫右耳垂
     if (rightEar && rightEar.confidence > 0.1) {
-      ellipse(rightEar.x + xPos, rightEar.y + yPos, 20, 20);
+      image(earringImg, rightEar.x + xPos, rightEar.y + yPos, earringSize, earringSize);
     }
+    // 恢復預設繪製模式，以免影響其他繪圖邏輯
+    imageMode(CORNER);
   }
   
   pop();
