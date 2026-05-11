@@ -17,12 +17,12 @@ function preload() {
   bodyPose = ml5.bodyPose();
   // 載入 HandPose 模型
   handPose = ml5.handPose();
-  // 載入 5 種指定的耳環圖片
+  // 載入 5 種指定的飾品圖片，請確保 pic 目錄下檔案名稱正確
   earringImages[0] = loadImage('pic/acc1_ring.png');
-  earringImages[1] = loadImage('pic/acc2_pearl.png');
-  earringImages[2] = loadImage('pic/acc3_tassel.png');
-  earringImages[3] = loadImage('pic/acc4_jade.png');
-  earringImages[4] = loadImage('pic/acc5_phoenix.png');
+  earringImages[1] = loadImage('pic/acc2_pearl.png');   // 修正為 pearl
+  earringImages[2] = loadImage('pic/acc3_tassel.png');  // 修正為 tassel
+  earringImages[3] = loadImage('pic/acc4_jade.png');    // 修正為 jade
+  earringImages[4] = loadImage('pic/acc5_phoenix.png'); // 修正為 phoenix
 }
 
 function setup() {
@@ -113,8 +113,9 @@ function draw() {
 // 當視窗大小改變時，重新調整畫布大小
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  if (video) {
-    video.size(windowWidth * 0.5, windowHeight * 0.5);
+  // 加上更嚴謹的檢查，確保 video 物件及其 elt 屬性都已存在
+  if (video && video.elt) {
+    video.size(width * 0.5, height * 0.5);
   }
 }
 
